@@ -1,17 +1,84 @@
 import mongoose from "mongoose";
 import question from "../models/question.js";
-
+import user from "../models/auth.js";
 
 export const Askquestion = async (req, res) => {
-  const { postquestiondata } = req.body;
-  const postques = new question({ ...postquestiondata });
   try {
+    const { postquestiondata } = req.body;
+
+    // Find current user
+    const currentUser = await user.findById(postquestiondata.userid);
+
+    if (!currentUser) {
+      return res.status(404).json({
+        message: "User not found",
+      });
+    }
+
+    // Subscription expired → Convert to Free Plan
+    if (
+      currentUser.subscriptionExpiry &&
+      new Date() > currentUser.subscriptionExpiry
+    ) {
+      currentUser.subscriptionPlan = "Free";
+      currentUser.subscriptionExpiry = null;
+
+      await currentUser.save();
+    }
+
+    // Today's date
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Count today's questions
+    const todayQuestions = await question.countDocuments({
+      userid: postquestiondata.userid,
+      askedon: {
+        $gte: today,
+      },
+    });
+
+    const plan = currentUser.subscriptionPlan;
+
+    // Free Plan → 1 question/day
+    if (plan === "Free" && todayQuestions >= 1) {
+      return res.status(403).json({
+        message: "Free Plan allows only 1 question per day.",
+      });
+    }
+
+    // Bronze → 5 questions/day
+    if (plan === "Bronze" && todayQuestions >= 5) {
+      return res.status(403).json({
+        message: "Bronze Plan allows only 5 questions per day.",
+      });
+    }
+
+    // Silver → 10 questions/day
+    if (plan === "Silver" && todayQuestions >= 10) {
+      return res.status(403).json({
+        message: "Silver Plan allows only 10 questions per day.",
+      });
+    }
+
+    // Gold → Unlimited
+
+    const postques = new question({
+      ...postquestiondata,
+    });
+
     await postques.save();
-    res.status(200).json({ data: postques });
+
+    res.status(200).json({
+      data: postques,
+    });
+
   } catch (error) {
     console.log(error);
-    res.status(500).json("something went wrong..");
-    return;
+
+    res.status(500).json({
+      message: "Something went wrong",
+    });
   }
 };
 

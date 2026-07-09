@@ -1,0 +1,30 @@
+# Node
+node_modules/
+package-lock.json
+yarn.lock
+
+# Next.js
+.next/
+.vercel/
+
+# Env files
+.env
+.env.*
+server/.env
+stack/.env.local
+
+# Build
+dist/
+build/
+
+# Logs
+/npm-debug.log*
+/yarn-debug.log*
+/yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Uploads and local data
+uploads/

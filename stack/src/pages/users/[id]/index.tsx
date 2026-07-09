@@ -52,6 +52,8 @@ const index = () => {
     tags: users?.tags || [],
   });
   const [newTag, setNewTag] = useState("");
+  const [receiverEmail, setReceiverEmail] = useState("");
+  const [transferPoints, setTransferPoints] = useState("");
 
   useEffect(() => {
     const fetchuser = async () => {
@@ -118,6 +120,28 @@ const index = () => {
 
   const currentUserId = user?._id;
   const isOwnProfile = id === currentUserId;
+  const handleTransferPoints = async () => {
+    try {
+  
+      await axiosInstance.post("/user/transfer-points", {
+        senderId: user?._id,
+        receiverEmail,
+        points: Number(transferPoints),
+      });
+  
+      toast.success("Points transferred successfully.");
+  
+      setReceiverEmail("");
+      setTransferPoints("");
+  
+    } catch (err: any) {
+  
+      toast.error(
+        err.response?.data?.message || "Transfer failed"
+      );
+  
+    }
+  };
   return (
     <Mainlayout>
       <div className="max-w-6xl">
@@ -267,11 +291,22 @@ const index = () => {
                 </Dialog>
               )}
             </div>
-            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600 mb-4">
+            <div className="flex flex-wrap items-center gap-6 text-sm text-gray-600 mb-4">
               <div className="flex items-center">
                 <Calendar className="w-4 h-4 mr-1" />
                 Member since{" "}
                 {new Date(users.joinDate).toISOString().split("T")[0]}
+              </div>
+
+              <div className="flex items-center">
+                🏆
+                <span className="ml-2 font-semibold">
+                  Reward Points:
+                </span>
+
+                <span className="ml-2 text-blue-600 font-bold">
+                  {users.rewardPoints || 0}
+                </span>
               </div>
             </div>
             <div className="flex flex-wrap items-center space-x-6 text-sm">
@@ -331,6 +366,74 @@ const index = () => {
                     </div>
                   ))}
                 </div>
+              </CardContent>
+            </Card>
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>Transfer Reward Points</CardTitle>
+              </CardHeader>
+
+              <CardContent className="space-y-4">
+
+                <Input
+                  placeholder="Receiver Email"
+                  value={receiverEmail}
+                  onChange={(e) => setReceiverEmail(e.target.value)}
+                />
+
+                <Input
+                  type="number"
+                  placeholder="Points"
+                  value={transferPoints}
+                  onChange={(e) => setTransferPoints(e.target.value)}
+                />
+
+                <Button
+                  className="bg-green-600 hover:bg-green-700 w-full"
+                  onClick={handleTransferPoints}
+                >
+                  Transfer Points
+                </Button>
+
+              </CardContent>
+            </Card>
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>Login History</CardTitle>
+              </CardHeader>
+
+              <CardContent>
+                {users.loginHistory && users.loginHistory.length > 0 ? (
+                  users.loginHistory.map((login: any, index: number) => (
+                    <div
+                      key={index}
+                      className="border-b py-3 last:border-b-0"
+                    >
+                      <p>
+                        <strong>Browser:</strong> {login.browser}
+                      </p>
+
+                      <p>
+                        <strong>Operating System:</strong> {login.os}
+                      </p>
+
+                      <p>
+                        <strong>Device:</strong> {login.device}
+                      </p>
+
+                      <p>
+                        <strong>IP Address:</strong> {login.ip}
+                      </p>
+
+                      <p>
+                        <strong>Login Time:</strong>{" "}
+                        {new Date(login.loginTime).toLocaleString()}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <p>No login history found.</p>
+                )}
               </CardContent>
             </Card>
           </div>

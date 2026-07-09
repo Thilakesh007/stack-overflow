@@ -14,12 +14,33 @@ const questionschema = mongoose.Schema(
     answer: [
       {
         answerbody: String,
+    
         useranswered: String,
+    
         userid: String,
-        answeredon: { type: Date, default: Date.now },
+    
+        answeredon: {
+          type: Date,
+          default: Date.now,
+        },
+    
+        upvote: {
+          type: [String],
+          default: [],
+        },
+    
+        downvote: {
+          type: [String],
+          default: [],
+        },
+    
+        bonusAwarded: {
+          type: Boolean,
+          default: false,
+        },
       },
     ],
   },
-  { timestamp: true }
+  { timestamps: true }
 );
 export default mongoose.model("question", questionschema);
